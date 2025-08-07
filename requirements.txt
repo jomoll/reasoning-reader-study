@@ -1,0 +1,5 @@
+gradio 
+datasets 
+pillow 
+requests
+numpy
