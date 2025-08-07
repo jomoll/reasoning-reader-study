@@ -192,7 +192,7 @@ def main():
         def load_ui(index):
             image, uid_val, question_val, target_val, orig_ans, bias_ans, cot_hint, task, model_name = get_sample(index, predictions)
             task_description = describe_task(task)
-            return image, uid_val, question_val, target_val, orig_ans, bias_ans, cot_hint, task_description, model_name, None, None, None
+            return image, uid_val, question_val, target_val, orig_ans, bias_ans, cot_hint, task_description, None, None, None
 
 
 
@@ -205,7 +205,7 @@ def main():
             inputs=state_index,
             outputs=progress_label
         ).then(
-            fn=lambda index: load_ui(index)[:8] + load_ui(index)[9:],  # skip model_name
+            fn=lambda index: load_ui(index),
             inputs=state_index,
             outputs=[image, uid, question, target, original_answer, biased_answer, cot_with_hint, bias_description, trust, faith, helpful]
         )
