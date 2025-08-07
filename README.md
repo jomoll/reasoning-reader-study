@@ -15,3 +15,9 @@ python app.py
 
 # Step 4: Open web-app
 # click on link in terminal (something like http://127.0.0.1:7860)
+
+# Step 5: Each time you 'submit' an annotation in the app, this will create an entry in the 'logs/reader_study_results.jsonl' file.
+# Each time you restart the app by running 'python app.py', it will automatically load your previous progress.
+# When you finish the last sample, the app will show errors, this is expected.
+# Please keep the logs file and send it to me as soon as you finished all samples, it will contain all your answers.
+# Have fun and thank you!! :)
