@@ -7,6 +7,11 @@ Follow these steps to set up the environment and get the project running:
 git clone https://github.com/jomoll/reasoning-reader-study
 cd reasoning-reader-study
 
+# [Optional:] 
+conda init
+conda create -n <your_name>
+conda activate <your_name>
+
 # Step 2: Install environment
 pip install -r requirements.txt
 
