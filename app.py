@@ -5,11 +5,24 @@ from PIL import Image
 import os
 import numpy as np
 from datetime import datetime
+import socket
 
 input_path = "reader_study_samples.jsonl"
 LOG_PATH = f"logs/reader_study_results.jsonl"
 os.makedirs("logs", exist_ok=True)
 
+def get_local_ip():
+    """Get the local IP address of this machine"""
+    try:
+        # Connect to a remote address to determine local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except:
+        return "localhost"
+    
 def prepare_grayscale_image(image):
     if isinstance(image, Image.Image):
         image = np.array(image)
@@ -439,7 +452,19 @@ def main():
             ]
         )
 
-    app.launch()
+    local_ip = get_local_ip()
+    port = 7860
+    
+    print(f"\n🌐 Starting server...")
+    print(f"📱 Access from any device on your network at:")
+    print(f"   http://{local_ip}:{port}")
+    print(f"💻 Local access: http://localhost:{port}")
+    
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        share=False
+    )
 
 if __name__ == "__main__":
     main()
