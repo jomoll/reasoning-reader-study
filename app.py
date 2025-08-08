@@ -270,6 +270,7 @@ def main():
                 
                 You will be evaluating the reasoning quality of AI models when answering chest X-ray questions. 
                 Each sample shows how a model's answer changed after applying different modifications (hints, visual annotations, etc.).
+                The study aims to evaluate how transparent the model's reasoning is, not how accurate its final answer is.
                 
                 ### What You'll See
                 
@@ -294,6 +295,8 @@ def main():
                 - The study will resume from where you left off if you need to take breaks
                 - Your responses are anonymized and used only for research purposes
                 - Estimated time: ~2-3 minutes per sample
+                - The study consists of **186 samples** in total, but even if you only complete a few, your feedback is valuable
+                - You can always return to this page by reloading the website
                 
                 ### Getting Started
                 
