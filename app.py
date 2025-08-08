@@ -241,7 +241,25 @@ def main():
     print(f"Loaded {len(predictions)} predictions from {input_path}")
     num_total = len(predictions)
 
-    with gr.Blocks() as app:
+    # Add custom CSS for better styling
+    css = """
+    .gradio-container {
+        max-width: 1200px !important;
+    }
+    .progress-bar {
+        background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+    }
+    .warning {
+        color: #ff6b6b;
+        font-weight: bold;
+    }
+    .success {
+        color: #4CAF50;
+        font-weight: bold;
+    }
+    """
+
+    with gr.Blocks(css=css, title="Reader Study - Reasoning VLMs") as app:
         login_visible = gr.State(True)
         current_user = gr.State("")
         
@@ -281,7 +299,7 @@ def main():
                 
                 Please enter your last name below to begin. Your progress will be automatically saved.
                 """)
-            name_input = gr.Textbox(label="Last Name", placeholder="Enter your last name to start")
+            name_input = gr.Textbox(label="Last Name (must have more than 2 characters)", placeholder="Enter your last name to start / Use the same name to resume next time", lines=1)
             start_button = gr.Button("Start Review", variant="primary")
             login_status = gr.Textbox(label="Status", visible=False)
 
@@ -362,29 +380,58 @@ def main():
 
         def start_review(last_name):
             if not last_name.strip():
-                return gr.update(), gr.update(), "Please enter your last name", gr.update(visible=True), gr.update(visible=False)
+                return (gr.update(), gr.update(), "Please enter your last name", 
+                        gr.update(visible=True), gr.update(visible=False),
+                        "", None, "", "", "", "", "", "", "", "", 0)
             
-            log_path = f"logs/reader_study_{last_name.lower()}.jsonl"
-            start_index = get_last_index(log_path)
+            # Add validation for name format
+            if not last_name.replace(" ", "").isalpha():
+                return (gr.update(), gr.update(), "Please enter a valid name (letters only)", 
+                        gr.update(visible=True), gr.update(visible=False),
+                        "", None, "", "", "", "", "", "", "", "", 0)
             
-            # Load initial UI
-            image_val, uid_val, question_val, target_val, orig_ans, bias_ans, cot_hint, task, model_name = get_sample(start_index, predictions)
-            task_description = describe_task(task)
-            progress_text = f"{start_index}/{num_total} samples completed"
-            user_text = f"**Logged in as: {last_name}**"
+            if len(last_name.strip()) < 2:
+                return (gr.update(), gr.update(), "Name must be at least 2 characters", 
+                        gr.update(visible=True), gr.update(visible=False),
+                        "", None, "", "", "", "", "", "", "", "", 0)
             
-            return (
-                last_name,  # current_user
-                start_index,  # state_index
-                "Login successful!",  # login_status
-                gr.update(visible=False),  # login_section
-                gr.update(visible=True),   # review_section
-                user_text,  # user_display
-                image_val, uid_val, question_val, target_val, orig_ans, bias_ans, 
-                cot_hint, task_description, progress_text, start_index
-            )
+            log_path = f"logs/reader_study_{last_name.lower().strip()}.jsonl"
+            
+            try:
+                start_index = get_last_index(log_path)
+                # Load initial UI with error handling
+                sample_data = get_sample(start_index, predictions)
+                if sample_data[0] is None and start_index >= len(predictions):
+                    return (gr.update(), gr.update(), "All samples completed!", 
+                            gr.update(visible=True), gr.update(visible=False),
+                            "", None, "", "", "", "", "", "", "", "", 0)
+                
+                # Load initial UI
+                image_val, uid_val, question_val, target_val, orig_ans, bias_ans, cot_hint, task, model_name = sample_data
+                task_description = describe_task(task)
+                progress_text = f"{start_index}/{num_total} samples completed"
+                user_text = f"**Logged in as: {last_name}**"
+                
+                return (
+                    last_name,  # current_user
+                    start_index,  # state_index
+                    "Login successful!",  # login_status
+                    gr.update(visible=False),  # login_section
+                    gr.update(visible=True),   # review_section
+                    user_text,  # user_display
+                    image_val, uid_val, question_val, target_val, orig_ans, bias_ans, 
+                    cot_hint, task_description, progress_text, start_index
+                )
+            except Exception as e:
+                return (gr.update(), gr.update(), f"Error loading data: {str(e)}", 
+                        gr.update(visible=True), gr.update(visible=False),
+                        "", None, "", "", "", "", "", "", "", "", 0)
 
         def submit_ratings(user, index, trust_val, faith_val, helpful_val, confidence_val):
+            # Check if all ratings are provided
+            if any(val is None for val in [trust_val, faith_val, helpful_val, confidence_val]):
+                return index, "⚠️ Please provide all ratings before submitting.", index, *([None] * 13)
+            
             if index >= len(predictions):
                 return index, "All samples reviewed. Thank you!", index, None, None, None, None, None, None, None, None, None, None, None, None
 
@@ -408,8 +455,18 @@ def main():
                 "confidence_score": confidence_val + 1 if confidence_val is not None else None,
             }
 
-            with open(log_path, "a") as f:
-                f.write(json.dumps(log_entry) + "\n")
+            try:
+                # Primary log
+                with open(log_path, "a") as f:
+                    f.write(json.dumps(log_entry) + "\n")
+                
+                # Backup log with timestamp
+                backup_path = f"logs/backup_{user.lower()}_{datetime.now().strftime('%Y%m%d')}.jsonl"
+                with open(backup_path, "a") as f:
+                    f.write(json.dumps(log_entry) + "\n")
+                    
+            except Exception as e:
+                return index, f"❌ Error saving data: {str(e)}", index, *([None] * 13)
 
             # Load next sample
             next_index = index + 1
