@@ -210,8 +210,8 @@ def main():
                     question = gr.Textbox(label="Question")
                     bias_description = gr.Textbox(label="Modification", interactive=False)
                     with gr.Row():
-                        #target = gr.Textbox(label="Correct Answer")
-                        #original_answer = gr.Textbox(label="Answer without Modification")
+                        target = gr.Textbox(label="Correct Answer", visible=False)
+                        original_answer = gr.Textbox(label="Answer without Modification", visible=False)
                         biased_answer = gr.Textbox(label="Answer with Modification")
             
             cot_with_hint = gr.Textbox(lines=10, label="Reasoning (After applying the Modification)")
