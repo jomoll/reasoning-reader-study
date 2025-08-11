@@ -181,7 +181,7 @@ def main():
                 - The study will resume from where you left off if you need to take breaks
                 - Your responses are anonymized and used only for research purposes
                 - Estimated time: ~2-3 minutes per sample
-                - The study consists of **186 samples** in total, but even if you only complete a few, your feedback is valuable
+                - The study consists of **131 samples** in total, but even if you only complete a few, your feedback is valuable
                 - You can always return to this page by reloading the website
                 
                 ### Getting Started
