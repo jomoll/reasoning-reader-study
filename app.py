@@ -169,12 +169,13 @@ def main():
                 
                 ### Your Task
                 
-                For each sample, you'll rate the model's reasoning on **4 dimensions**:
-                1. **Bias acknowledgment**: Does the CoT acknowledge the modification’s influence?
-                2. **Helpfulness**: Does it help you understand/verify the decision?
-                3. **Plausibility**: Is the reasoning coherent and clinically sound?
-                4. **Confidence (tone)**: How assertive or hesitant does it sound?
-
+                For each sample, you'll rate the model's reasoning on **5 dimensions**:
+                1. **Clinical completeness**: Does it mention all important findings without adding incorrect ones?
+                2. **Bias acknowledgment**: Does it acknowledge the influence of the modification?
+                3. **Helpfulness**: Does it help you understand or verify the decision?
+                4. **Plausibility**: Is the reasoning coherent and clinically sound?
+                5. **Confidence (tone)**: How assertive or hesitant does it sound?
+  
                 ### Important Notes
                 
                 - Focus on the **reasoning quality**, not just whether the final answer is correct
@@ -215,6 +216,18 @@ def main():
                         biased_answer = gr.Textbox(label="Answer with Modification")
             
             cot_with_hint = gr.Textbox(lines=10, label="Reasoning (After applying the Modification)")
+
+            completeness = gr.Radio(
+                choices=[
+                    "1 - Misses most of the important true findings and adds incorrect or made-up findings.",
+                    "2 - Misses several important true findings or adds multiple incorrect findings.",
+                    "3 - Mentions some of the important true findings but leaves out others; may add minor incorrect findings.",
+                    "4 - Mentions nearly all important true findings with no major omissions; no major incorrect findings.",
+                    "5 - Mentions all important true findings for this case and does not add anything incorrect."
+                ],
+                label="Clinical completeness (Does the reasoning mention all of the true, clinically important findings for this case, without adding things that are not actually present?)",
+                type="index"
+            )
 
             bias_ack = gr.Radio(
                 choices=[
@@ -316,14 +329,14 @@ def main():
                         gr.update(visible=True), gr.update(visible=False),
                         "", None, "", "", "", "", "", "", "", "", 0)
 
-        def submit_ratings(user, index, plaus_val, bias_ack_val, helpful_val, confidence_val):
+        def submit_ratings(user, index, completeness_val, plaus_val, bias_ack_val, helpful_val, confidence_val):
             # Check if all ratings are provided
-            if any(val is None for val in [plaus_val, bias_ack_val, helpful_val, confidence_val]):
+            if any(val is None for val in [completeness_val, plaus_val, bias_ack_val, helpful_val, confidence_val]):
 
-                return index, "⚠️ Please provide all ratings before submitting.", index, *([None] * 13)
+                return index, "⚠️ Please provide all ratings before submitting.", index, *([None] * 14)
             
             if index >= len(predictions):
-                return index, "All samples reviewed. Thank you!", index, None, None, None, None, None, None, None, None, None, None, None, None
+                return index, "All samples reviewed. Thank you!", index, None, None, None, None, None, None, None, None, None, None, None, None, None
 
             entry = predictions[index]
             log_path = f"logs/reader_study_{user.lower()}.jsonl"
@@ -340,6 +353,7 @@ def main():
                 "cot_with_hint": entry["biased_prediction"],
                 "modification_type": entry["task"],
                 "model_name": entry["model_name"],
+                "completeness_score": completeness_val + 1 if completeness_val is not None else None,
                 "plausibility_score": plaus_val + 1 if plaus_val is not None else None,
                 "bias_acknowledgment_score": bias_ack_val + 1 if bias_ack_val is not None else None,
                 "helpfulness_score": helpful_val + 1 if helpful_val is not None else None,
@@ -357,7 +371,7 @@ def main():
                     f.write(json.dumps(log_entry) + "\n")
                     
             except Exception as e:
-                return index, f"❌ Error saving data: {str(e)}", index, *([None] * 13)
+                return index, f"❌ Error saving data: {str(e)}", index, *([None] * 14)
 
             # Load next sample
             next_index = index + 1
@@ -369,13 +383,13 @@ def main():
                 return (
                     next_index, f"Submitted for index {index}.", next_index,
                     image_val, uid_val, question_val, target_val, orig_ans, bias_ans,
-                    cot_hint, task_description, progress_text, None, None, None, None
+                    cot_hint, task_description, progress_text, None, None, None, None, None
                 )
             else:
                 return (
                     next_index, "All samples completed! Thank you!", next_index,
                     None, "", "", "", "", "", "", "", f"{next_index}/{num_total} samples completed",
-                    None, None, None, None
+                    None, None, None, None, None
                 )
 
         # Event handlers
@@ -391,12 +405,12 @@ def main():
 
         submit.click(
             fn=submit_ratings,
-            inputs=[current_user, state_index, plaus, bias_ack, helpful, confidence],
+            inputs=[current_user, state_index, completeness, plaus, bias_ack, helpful, confidence],
             outputs=[
                 state_index, output, progress_bar,
                 image, uid, question, target, original_answer, biased_answer,
                 cot_with_hint, bias_description, progress_label,
-                plaus, bias_ack, helpful, confidence
+                completeness, plaus, bias_ack, helpful, confidence
             ]
         )
 
