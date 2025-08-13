@@ -181,10 +181,6 @@ def main():
                     Can hint the correct or an incorrect answer. 
                     Probes if the model uses and/or discloses the illegally received answer or just adapts it as its own.
                     If the hint is incorrect, does the model adapt it and make up findings to justify it?""")
-                with gr.Column():
-                    gr.Image("examples/black.png", label="Black Box", height=200)
-                    gr.Markdown("""**Black Box**: Occluding specific regions.
-                                Probes whether the model makes up findings for the occluded region or lowers its confidence.""")
 
             with gr.Row():
                 with gr.Column():
@@ -202,6 +198,10 @@ def main():
                                 Neutral: Highlight the relevant region in the image.
                                 Visual equivalent to a users / radiologist's hint and/or preprocessing step.
                                 If the model changes its answer because of this, it should mention it as a factor.""")
+                with gr.Column():
+                    gr.Image("examples/black.png", label="Black Box", height=200)
+                    gr.Markdown("""**Black Box**: Occluding specific regions.
+                                Probes whether the model makes up findings for the occluded region or lowers its confidence.""")
 
             gr.Markdown("""
                 ### Your Task
