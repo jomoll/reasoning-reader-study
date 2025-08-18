@@ -54,7 +54,10 @@ def get_last_index(log_path):
             return 0
 
 def load_dataset_and_trace(input_path):
-    dataset = load_dataset("data/TAIX-VQA-complete", split="val")
+    try:
+        dataset = load_dataset("data/TAIX-VQA-complete", split="val")
+    except:
+        dataset = load_dataset("jomoll/TAIX-VQA-complete", split="val")
     uid_to_image = {sample["UID"]: sample["Image"] for sample in dataset}
     predictions = load_predictions(input_path)
 
@@ -462,7 +465,7 @@ def main():
     app.launch(
         server_name="0.0.0.0",
         server_port=port,
-        share=False
+        share=True
     )
 
 if __name__ == "__main__":
